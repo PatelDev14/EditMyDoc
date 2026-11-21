@@ -599,3 +599,156 @@ button.ghost:disabled { opacity: 0.4; cursor: not-allowed; }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; }
 }
+
+/* PDF viewer */
+.viewing-pdf .main {
+  min-width: 0;
+  max-width: none;
+}
+
+#viewer {
+  margin-top: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.pdf-open #list { display: none; }
+
+#viewer:not([hidden]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  height: clamp(400px, 72vh, 960px);
+}
+
+.viewer-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-right: 1px solid var(--line);
+}
+
+.viewer-toolbar {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.viewer-filename {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.viewer-controls,
+.viewer-pagination {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.viewer-pagination {
+  white-space: nowrap;
+  color: var(--mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.viewer-toolbar button,
+.viewer-toolbar input,
+.viewer-toolbar select {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+}
+
+.viewer-toolbar button {
+  min-width: 34px;
+  padding-inline: 8px;
+  cursor: pointer;
+}
+
+.viewer-pagination button { font-size: 19px; }
+
+.viewer-toolbar button:hover:not(:disabled) { background: var(--acc2); }
+.viewer-toolbar button:disabled { opacity: 0.35; cursor: default; }
+
+#viewerPage {
+  width: 5ch;
+  text-align: center;
+  appearance: textfield;
+}
+
+#viewerPage:hover,
+#viewerPage:focus { border-color: var(--line); }
+
+#viewerPage::-webkit-inner-spin-button,
+#viewerPage::-webkit-outer-spin-button { appearance: none; }
+
+#viewerZoom {
+  border-color: var(--line);
+  padding-inline: 7px;
+  cursor: pointer;
+}
+
+.pdf-open #viewer { overflow-anchor: none; }
+
+#viewerThumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  align-content: start;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px;
+}
+
+#viewerThumbs button {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 106px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+
+#viewerThumbs button[aria-current="page"] {
+  border-color: var(--acc);
+  background: var(--acc2);
+}
+
+#viewerViewport {
+  overflow: auto;
+  padding: 16px;
+  background: var(--bg);
+}
+
+#viewerViewport canvas {
+  display: block;
+  margin-inline: auto;
+  background: white;
+  box-shadow: var(--shadow);
+}
+
+@media (max-width: 640px) {
+  .viewer-toolbar { padding: 8px; }
+
+  .viewer-controls { flex-wrap: wrap; }
+
+  .viewer-pagination { gap: 3px; }
+
+  #viewerViewport { padding: 8px; }
+}

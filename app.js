@@ -91,8 +91,12 @@ async function savePdf(doc) {
   return bytes;
 }
 
+function loadPdfJs(data, password) {
+  return pdfjsLib.getDocument({ data, password, isEvalSupported: false });
+}
+
 async function openPdfJs(f, password) {
-  return pdfjsLib.getDocument({ data: await f.arrayBuffer(), password, isEvalSupported: false }).promise;
+  return loadPdfJs(await f.arrayBuffer(), password).promise;
 }
 
 async function renderPage(pdf, n, scale, type, q) {
@@ -808,7 +812,9 @@ function renderNav(filter = '') {
 }
 
 function selectTool(id) {
-  tool = TOOLS.find(t => t.id === id) || TOOLS[0];
+  if (tool.id === 'viewer') pdfViewer.close();
+  tool = TOOLS.find(t => t.id === id) || TOOLS.find(t => t.id === 'merge');
+  $('#app').classList.toggle('viewing-pdf', tool.id === 'viewer');
   files = [];
   location.hash = tool.id;
   $('#title').textContent = tool.name;
@@ -818,6 +824,7 @@ function selectTool(id) {
   inp.multiple = !!tool.multi;
   inp.value = '';
   $('#dropText').textContent = tool.multi ? 'Drop files here' : 'Drop a file here';
+  $('#run').hidden = tool.id === 'viewer';
   $('#opts').innerHTML = tool.opts.map(o => {
     let field;
     if (o.type === 'select') {
@@ -902,6 +909,7 @@ function addFiles(list) {
   clearOut();
   setProgress(null);
   renderList();
+  if (tool.id === 'viewer') pdfViewer.open(files[0]);
 }
 
 function link(name, blob, note, cls) {
@@ -912,6 +920,7 @@ function link(name, blob, note, cls) {
 }
 
 async function run() {
+  if (tool.id === 'viewer') return;
   if (running || files.length < (tool.min || 1)) return;
   const o = {};
   tool.opts.forEach(x => {
@@ -965,6 +974,7 @@ $('#file').addEventListener('change', e => {
 
 $('#run').addEventListener('click', run);
 $('#clear').addEventListener('click', () => {
+  if (tool.id === 'viewer') pdfViewer.close();
   files = [];
   clearOut();
   status('');
@@ -977,7 +987,10 @@ $('#list').addEventListener('click', e => {
   if (!b) return;
   const i = +b.dataset.i;
   const a = b.dataset.a;
-  if (a === 'del') files.splice(i, 1);
+  if (a === 'del') {
+    files.splice(i, 1);
+    if (tool.id === 'viewer') pdfViewer.close();
+  }
   else {
     const j = a === 'up' ? i - 1 : i + 1;
     if (j < 0 || j >= files.length) return;

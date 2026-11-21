@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Private PDF Toolbox — 100% local, zero uploads</title>
+<meta name="description" content="Merge, split, compress, protect, convert PDFs and images entirely in your browser. Nothing is uploaded. Your files never leave your device.">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; worker-src 'self' blob: https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' blob: data:; connect-src https://cdnjs.cloudflare.com; object-src 'none'; base-uri 'none'; form-action 'none'">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app" id="app">
+  <aside class="side" id="side">
+    <div class="brand">
+      <span class="lock" aria-hidden="true">🔒</span>
+      <div>
+        <b>Private PDF Toolbox</b>
+        <small>Runs only in your browser · Nothing is uploaded</small>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <input type="search" id="toolSearch" placeholder="Search tools…" aria-label="Search tools" autocomplete="off">
+    </div>
+
+    <nav id="nav" aria-label="Tools"></nav>
+
+    <div class="side-footer">
+      <button type="button" id="themeBtn" class="theme-btn" title="Toggle light / dark">
+        <span class="theme-icon">🌓</span> Theme
+      </button>
+      <p class="privacy-note">All processing happens on your device. Close the tab and every file disappears.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="page-header">
+      <div class="header-top">
+        <h1 id="title"></h1>
+        <button type="button" id="menuBtn" class="menu-btn" aria-label="Open menu">☰</button>
+      </div>
+      <p id="desc"></p>
+    </header>
+
+    <label id="drop" class="drop" tabindex="0">
+      <input id="file" type="file" hidden>
+      <div class="drop-icon" aria-hidden="true">📄</div>
+      <strong id="dropText">Drop files here</strong>
+      <span>or click to choose · files stay on your device</span>
+    </label>
+
+    <ul id="list" class="list" aria-label="Selected files"></ul>
+
+    <section id="opts" class="opts" aria-label="Options"></section>
+
+    <div class="actions">
+      <button id="run" class="primary" disabled>Run</button>
+      <button id="clear" class="ghost" disabled>Clear files</button>
+      <span id="status" role="status" aria-live="polite"></span>
+    </div>
+
+    <div id="progress" class="progress hidden" aria-hidden="true">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <section id="out" class="out" aria-label="Results"></section>
+
+    <footer class="footer">
+      <p>Files are processed locally with JavaScript. No servers, no accounts, no tracking. Your data never leaves this tab.</p>
+      <p class="ad-slot" id="adSlot" hidden>
+        <!-- Optional privacy-respecting support slot (no tracking scripts) -->
+        <span>Support private tools · <a href="#" id="supportLink">Buy me a coffee</a></span>
+      </p>
+    </footer>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="app.js"></script>
+<script src="acrobat.js"></script>
+<script src="pro.js"></script>
+<script src="fix.js"></script>
+</body>
+</html>

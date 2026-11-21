@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=pdf-workspace">
 </head>
 <body>
 <div class="app" id="app">
@@ -46,11 +46,11 @@
       <p id="desc"></p>
     </header>
 
-    <label id="drop" class="drop" tabindex="0">
-      <input id="file" type="file" hidden>
+    <input id="file" type="file" hidden>
+    <label id="drop" class="drop" for="file" tabindex="0">
       <div class="drop-icon" aria-hidden="true">📄</div>
       <strong id="dropText">Drop files here</strong>
-      <span>or click to choose · files stay on your device</span>
+      <span class="drop-hint">or click to choose · files stay on your device</span>
     </label>
 
     <ul id="list" class="list" aria-label="Selected files"></ul>
@@ -68,6 +68,35 @@
     </div>
 
     <section id="out" class="out" aria-label="Results"></section>
+
+    <section id="viewer" aria-label="PDF viewer" hidden>
+      <div class="viewer-sidebar">
+        <div class="viewer-toolbar">
+          <span id="viewerFilename" class="viewer-filename"></span>
+          <div class="viewer-controls">
+            <div class="viewer-pagination" role="group" aria-label="Page navigation">
+              <button type="button" id="viewerPrevious" aria-label="Previous page" title="Previous page">‹</button>
+              <input type="number" id="viewerPage" aria-label="Page number" min="1" step="1" value="1">
+              <span id="viewerCount"></span>
+              <button type="button" id="viewerNext" aria-label="Next page" title="Next page">›</button>
+            </div>
+            <select id="viewerZoom" aria-label="Zoom level">
+              <option value="page">Fit page</option>
+              <option value="fit">Fit width</option>
+              <option value="0.5">50%</option>
+              <option value="0.75">75%</option>
+              <option value="1">100%</option>
+              <option value="1.25">125%</option>
+              <option value="1.5">150%</option>
+              <option value="2">200%</option>
+              <option value="3">300%</option>
+            </select>
+          </div>
+        </div>
+        <div id="viewerThumbs" aria-label="Page thumbnails" role="group"></div>
+      </div>
+      <div id="viewerViewport" tabindex="0" role="region" aria-label="Document page"></div>
+    </section>
 
     <footer class="footer">
       <p>Files are processed locally with JavaScript. No servers, no accounts, no tracking. Your data never leaves this tab.</p>
@@ -88,6 +117,7 @@
 <script src="app.js"></script>
 <script src="acrobat.js"></script>
 <script src="pro.js"></script>
+<script src="viewer.js"></script>
 <script src="fix.js"></script>
 </body>
 </html>

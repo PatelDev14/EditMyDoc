@@ -108,6 +108,42 @@
   </main>
 </div>
 
+<dialog id="resultPreview" aria-labelledby="previewTitle">
+  <div class="preview-header">
+    <h2 id="previewTitle"></h2>
+    <a id="previewDownload" class="result-download">Download</a>
+    <button type="button" id="previewClose" class="ghost">Close</button>
+  </div>
+  <div id="previewControls" class="preview-controls" hidden></div>
+  <p id="previewStatus" role="status" aria-live="polite"></p>
+  <div id="previewContent" tabindex="0" role="region" aria-label="File preview"></div>
+</dialog>
+
+<dialog id="redactionReview" aria-labelledby="redactionReviewTitle">
+  <div class="preview-header">
+    <h2 id="redactionReviewTitle">Review redactions</h2>
+    <button type="button" id="redactionCancel" class="ghost">Cancel</button>
+    <button type="button" id="redactionApply" class="primary">Apply redactions</button>
+  </div>
+  <div class="redaction-toolbar">
+    <div class="redaction-actions" role="group" aria-label="Page navigation">
+      <button type="button" id="redactionPrevious" class="ghost" aria-label="Previous page">‹</button>
+      <span id="redactionPage"></span>
+      <button type="button" id="redactionNext" class="ghost" aria-label="Next page">›</button>
+    </div>
+    <div class="redaction-actions" role="group" aria-label="Edit redactions">
+      <button type="button" id="redactionUndo" class="ghost">Undo</button>
+      <button type="button" id="redactionRedo" class="ghost">Redo</button>
+      <button type="button" id="redactionRemove" class="ghost">Remove selected</button>
+    </div>
+  </div>
+  <p class="redaction-instructions">Drag to draw a box. Select a box to remove it, or drag it or its corner to adjust it.</p>
+  <p id="redactionReviewStatus" role="status" aria-live="polite"></p>
+  <div id="redactionReviewContent" tabindex="0" role="region" aria-label="Page to redact">
+    <div id="redactionSurface"></div>
+  </div>
+</dialog>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
@@ -117,7 +153,10 @@
 <script src="app.js"></script>
 <script src="acrobat.js"></script>
 <script src="pro.js"></script>
+<script src="redaction-review.js"></script>
+<script src="redaction.js"></script>
 <script src="viewer.js"></script>
+<script src="preview.js"></script>
 <script src="fix.js"></script>
 </body>
 </html>

@@ -225,14 +225,11 @@ const pdfViewer = (() => {
     viewport.focus({ preventScroll: true });
   });
   document.addEventListener('keydown', event => {
-    if (root.hidden || event.defaultPrevented || event.altKey || event.ctrlKey ||
-        event.metaKey || event.shiftKey ||
-        event.target.closest?.('input, select, textarea, [contenteditable]')) return;
-    const previousPage = event.key === 'PageUp' || event.key === 'ArrowLeft';
-    const nextPage = event.key === 'PageDown' || event.key === 'ArrowRight';
-    if (!previousPage && !nextPage) return;
+    if (root.hidden || $('#resultPreview').open) return;
+    const step = pdfPageKeyStep(event);
+    if (!step) return;
     event.preventDefault();
-    goToPage(pageNumber + (previousPage ? -1 : 1));
+    goToPage(pageNumber + step);
   });
   let availableWidth;
   let availableHeight;

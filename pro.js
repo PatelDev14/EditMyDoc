@@ -41,38 +41,6 @@ TOOLS.push(
     }
   },
   {
-    id: 'redact', cat: 'Acrobat', icon: '█', name: 'Redact text',
-    desc: 'Black out matching selectable text blocks, then export image-only pages. Matches must be within a single text block. Review every page before sharing.',
-    accept: '.pdf', multi: false, opts: [
-      { id: 'terms', label: 'Words / phrases (comma-separated)', type: 'text', value: '', hint: 'Whole text block containing a match is covered' }
-    ],
-    async run([f], o) {
-      const terms = o.terms.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-      if (!terms.length) throw new Error('Enter at least one word to redact.');
-      const pdf = await openPdfJs(f), out = await PDFDocument.create(); let hits = 0;
-      for (let i = 1; i <= pdf.numPages; i++) {
-        status(`Redacting page ${i}/${pdf.numPages}`); setProgress((i / pdf.numPages) * 95);
-        const p = await pdf.getPage(i), vp = p.getViewport({ scale: 2 });
-        const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
-        const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height);
-        await p.render({ canvasContext: x, viewport: vp }).promise;
-        (await p.getTextContent()).items.forEach(it => {
-          if (typeof it.str !== 'string' || !terms.some(t => it.str.toLowerCase().includes(t))) return;
-          const m = pdfjsLib.Util.transform(vp.transform, it.transform), h = (it.height || 10) * 2;
-          if (Math.abs(m[1]) > .01 || Math.abs(m[2]) > .01 || m[0] <= 0 || m[3] >= 0 || it.dir === 'ttb') {
-            throw new Error(`A match on page ${i} uses rotated or transformed text that this tool cannot safely cover.`);
-          }
-          x.fillStyle = '#000'; x.fillRect(m[4] - 1, m[5] - h, it.width * 2 + 2, h * 1.3); hits++;
-        });
-        const jpg = await out.embedJpg(await (await toBlob(c, 'image/jpeg', .9)).arrayBuffer());
-        out.addPage([vp.width / 2, vp.height / 2]).drawImage(jpg, { x: 0, y: 0, width: vp.width / 2, height: vp.height / 2 });
-      }
-      if (!hits) throw new Error('No matches found (scanned pages have no text — OCR would be needed).');
-      setProgress(100);
-      return [{ name: `${base(f)}-redacted.pdf`, blob: pdfBlob(await savePdf(out)), note: `${hits} area(s) covered` }];
-    }
-  },
-  {
     id: 'highlight', cat: 'Acrobat', icon: '🖍', name: 'Highlight text',
     desc: 'Highlight every text block containing your words. Text stays selectable and searchable.',
     accept: '.pdf', multi: false, opts: [

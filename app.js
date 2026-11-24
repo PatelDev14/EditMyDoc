@@ -99,6 +99,14 @@ async function openPdfJs(f, password) {
   return loadPdfJs(await f.arrayBuffer(), password).promise;
 }
 
+function pdfPageKeyStep(event) {
+  if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey ||
+      event.shiftKey || event.target.closest?.('input, select, textarea, [contenteditable]')) return 0;
+  if (event.key === 'PageUp' || event.key === 'ArrowLeft') return -1;
+  if (event.key === 'PageDown' || event.key === 'ArrowRight') return 1;
+  return 0;
+}
+
 async function renderPage(pdf, n, scale, type, q) {
   const p = await pdf.getPage(n);
   const vp = p.getViewport({ scale });
@@ -880,10 +888,11 @@ function renderList() {
   const min = tool.min || 1;
   $('#run').disabled = running || files.length < min;
   $('#clear').disabled = !files.length;
-  $('#run').textContent = files.length >= min ? `Run · ${tool.name}` : `Need ${min}+ file${min > 1 ? 's' : ''}`;
+  $('#run').textContent = files.length >= min ? (tool.actionLabel || `Run · ${tool.name}`) : `Need ${min}+ file${min > 1 ? 's' : ''}`;
 }
 
 function clearOut() {
+  resultPreview.close();
   urls.forEach(URL.revokeObjectURL);
   urls = [];
   $('#out').innerHTML = '';
@@ -912,11 +921,22 @@ function addFiles(list) {
   if (tool.id === 'viewer') pdfViewer.open(files[0]);
 }
 
-function link(name, blob, note, cls) {
+function resultRow({ name, blob, note }) {
   const u = URL.createObjectURL(blob);
   urls.push(u);
-  const label = escapeHtml(name);
-  return `<a href="${u}" download="${label}" class="${cls || ''}">${label}<span>${escapeHtml(note || fmt(blob.size))}</span></a>`;
+  const row = document.createElement('article');
+  row.className = 'result-row';
+  row.innerHTML = `
+    <div class="result-details">
+      <strong>${escapeHtml(name)}</strong>
+      <span>${escapeHtml(note || fmt(blob.size))}</span>
+    </div>
+    <div class="result-actions">
+      <button type="button" class="ghost">View</button>
+      <a class="result-download" href="${u}" download="${escapeHtml(name)}">Download</a>
+    </div>`;
+  row.querySelector('button').addEventListener('click', () => resultPreview.open({ name, blob, url: u }));
+  return row;
 }
 
 async function run() {
@@ -930,23 +950,25 @@ async function run() {
   running = true;
   for (const id of ['#nav', '#drop', '#list', '#opts', '#clear']) $(id).inert = true;
   $('#run').disabled = true;
-  clearOut();
+  if (tool.id !== 'redact') clearOut();
   status('Working…');
   setProgress(5);
   try {
     const res = await tool.run(files, o);
-    let html = '';
+    if (!res.length) {
+      status('');
+      setProgress(null);
+      return;
+    }
     if (res.length > 1) {
       const z = new JSZip();
       res.forEach(r => addZipEntry(z, r.archivePath || r.name, r.blob));
-      html += link('all-files.zip', await z.generateAsync({ type: 'blob' }), `${res.length} files`, 'zip');
+      const bundle = await z.generateAsync({ type: 'blob' });
+      res.unshift({ name: 'all-files.zip', blob: bundle, note: `${res.length} files` });
     }
-    html += res.map(r => link(r.name, r.blob, r.note)).join('');
-    if (tool.id === 'info' || tool.id === 'extract-text' || tool.id === 'hash') {
-      html += `<p class="info">Tip: open the .txt file to read the content, or download it.</p>`;
-    }
-    $('#out').innerHTML = html;
-    status('Done — click a file to download.', 'ok');
+    if (tool.id === 'redact') clearOut();
+    $('#out').replaceChildren(...res.map(resultRow));
+    status('Done. View or download your results.', 'ok');
     setProgress(100);
   } catch (e) {
     console.error(e);

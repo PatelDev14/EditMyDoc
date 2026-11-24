@@ -1,5 +1,4 @@
 /* Pro add-on. Load AFTER app.js and acrobat.js. Everything stays local. */
-const SUPPORT_URL = ''; // e.g. 'https://buymeacoffee.com/yourname' — leave '' to hide the link
 
 TOOLS.splice(TOOLS.findIndex(t => t.id === 'sign'), 1);
 
@@ -109,14 +108,3 @@ TOOLS.push(
     }
   }
 );
-
-// Working "Buy me a coffee" link (old handler only showed a message)
-{
-  const old = $('#supportLink'), slot = $('#adSlot');
-  if (old && slot && SUPPORT_URL) {
-    const a = old.cloneNode(true);
-    a.href = SUPPORT_URL; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    old.replaceWith(a); slot.hidden = false;
-  }
-}
-

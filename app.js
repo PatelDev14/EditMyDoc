@@ -1075,13 +1075,3 @@ $('#menuBtn').addEventListener('click', () => {
   }
   ov.classList.toggle('show', side.classList.contains('open'));
 });
-
-// Optional support link (no tracking)
-const support = $('#supportLink');
-if (support) {
-  support.addEventListener('click', e => {
-    e.preventDefault();
-    status('Thanks for considering support! This tool stays free and private.', 'ok');
-  });
-}
-

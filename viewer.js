@@ -225,7 +225,7 @@ const pdfViewer = (() => {
     viewport.focus({ preventScroll: true });
   });
   document.addEventListener('keydown', event => {
-    if (root.hidden || $('#resultPreview').open) return;
+    if (root.hidden || sidebarOpen || $('#resultPreview').open) return;
     const step = pdfPageKeyStep(event);
     if (!step) return;
     event.preventDefault();

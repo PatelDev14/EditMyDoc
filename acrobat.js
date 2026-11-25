@@ -122,7 +122,7 @@ TOOLS.push(
   },
   {
     id: 'grayscale', cat: 'Acrobat', icon: '◐', name: 'Grayscale PDF',
-    desc: 'Convert pages to black & white for printing. Pages become images (text not selectable).',
+    desc: 'Convert color pages to shades of gray for monochrome printing. The export is image-only.',
     accept: '.pdf', multi: false, opts: [],
     async run([f]) {
       const pdf = await openPdfJs(f), out = await PDFDocument.create();

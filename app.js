@@ -184,7 +184,7 @@ const TOOLS = [
         ['remove', 'Remove these pages'],
         ['each', 'Split every page']
       ]},
-      { id: 'pages', label: 'Pages (e.g. 1-3, 5, 8-)', type: 'text', value: '1', hint: 'Leave blank for “every page” when splitting' }
+      { id: 'pages', label: 'Pages', type: 'text', value: '1', hint: 'Example: 1-3, 5, 8-. Ignored in “Split every page” mode.' }
     ],
     async run([f], o) {
       const src = await loadPdf(f);
@@ -425,7 +425,7 @@ const TOOLS = [
     }
   },
   {
-    id: 'extract-text', cat: 'PDF', icon: '文字', name: 'Extract text',
+    id: 'extract-text', cat: 'PDF', icon: '¶', name: 'Extract text',
     desc: 'Pull selectable text out of a PDF into a plain .txt file.',
     accept: '.pdf', multi: false, opts: [],
     async run([f]) {
@@ -509,8 +509,8 @@ const TOOLS = [
     }
   },
   {
-    id: 'imgconv', cat: 'Images', icon: '⇄', name: 'Convert images',
-    desc: 'Convert between JPG, PNG and WebP. Batch supported.',
+    id: 'imgconv', cat: 'Images', icon: '⇄', name: 'Convert & compress images',
+    desc: 'Convert images to JPG, PNG, or WebP. Lower JPG or WebP quality to reduce file size.',
     accept: 'image/*', multi: true, opts: [
       { id: 'type', label: 'Convert to', type: 'select', options: [
         ['image/png', 'PNG'],
@@ -537,7 +537,7 @@ const TOOLS = [
         }
         x.drawImage(img, 0, 0);
         const blob = await toBlob(c, o.type, +o.q);
-        r.push({ name: `${base(f)}.${ext}`, blob, note: fmt(blob.size) });
+        r.push({ name: `${base(f)}.${ext}`, blob, note: `${fmt(f.size)} → ${fmt(blob.size)}` });
       }
       setProgress(100);
       return r;
@@ -551,7 +551,7 @@ const TOOLS = [
         ['pct', 'Percentage'],
         ['max', 'Max width or height']
       ]},
-      { id: 'val', label: 'Value (e.g. 50 or 1200)', type: 'number', value: 50 },
+      { id: 'val', label: 'Resize value', type: 'number', value: 50, hint: 'Enter a percentage or a maximum size in pixels.' },
       { id: 'type', label: 'Output format', type: 'select', options: [
         ['image/png', 'PNG'],
         ['image/jpeg', 'JPG'],
@@ -596,39 +596,6 @@ const TOOLS = [
       return r;
     }
   },
-  {
-    id: 'imgcompress', cat: 'Images', icon: '📦', name: 'Compress images',
-    desc: 'Reduce image file size with adjustable quality. Great for web or email.',
-    accept: 'image/*', multi: true, opts: [
-      { id: 'q', label: 'Quality (0.1 – 1)', type: 'number', value: 0.7 },
-      { id: 'type', label: 'Output', type: 'select', options: [
-        ['image/jpeg', 'JPG'],
-        ['image/webp', 'WebP']
-      ]}
-    ],
-    async run(files, o) {
-      const ext = o.type === 'image/webp' ? 'webp' : 'jpg';
-      const r = [];
-      for (let i = 0; i < files.length; i++) {
-        const f = files[i];
-        status(`Compressing ${i + 1}/${files.length}`);
-        setProgress((i / files.length) * 95);
-        const img = await loadImage(f);
-        const c = document.createElement('canvas');
-        c.width = img.width;
-        c.height = img.height;
-        const x = c.getContext('2d');
-        x.fillStyle = '#fff';
-        x.fillRect(0, 0, c.width, c.height);
-        x.drawImage(img, 0, 0);
-        const blob = await toBlob(c, o.type, +o.q);
-        r.push({ name: `${base(f)}.${ext}`, blob, note: `${fmt(f.size)} → ${fmt(blob.size)}` });
-      }
-      setProgress(100);
-      return r;
-    }
-  },
-
   /* ── Office / data ── */
   {
     id: 'xls2pdf', cat: 'Office', icon: '▦', name: 'Excel / CSV to PDF',
@@ -794,7 +761,7 @@ function addZipEntry(zip, name, data) {
 }
 
 function getCats() {
-  const map = {};
+  const map = { Workspace: [], PDF: [], Acrobat: [], Images: [], Office: [], Utilities: [] };
   TOOLS.forEach(t => {
     if (!map[t.cat]) map[t.cat] = [];
     map[t.cat].push(t);
@@ -802,26 +769,50 @@ function getCats() {
   return map;
 }
 
-function renderNav(filter = '') {
-  const q = filter.trim().toLowerCase();
+const collapsedToolGroups = new Set();
+let searchingTools = false;
+
+function renderNav() {
+  const query = $('#toolSearch').value.trim().toLowerCase();
+  if (!searchingTools) {
+    for (const group of $$('#nav details[data-category]')) {
+      if (group.open) collapsedToolGroups.delete(group.dataset.category);
+      else collapsedToolGroups.add(group.dataset.category);
+    }
+  }
+  searchingTools = Boolean(query);
+  const words = query ? query.split(/\s+/) : [];
   const cats = getCats();
   let html = '';
+  let count = 0;
   for (const [cat, list] of Object.entries(cats)) {
-    const filtered = q ? list.filter(t => t.name.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.id.includes(q)) : list;
+    const filtered = list.filter(t => {
+      const label = `${t.name} ${t.desc} ${t.id} ${cat}`.toLowerCase();
+      return words.every(word => label.includes(word));
+    });
     if (!filtered.length) continue;
-    html += `<div class="cat-label">${cat}</div>`;
+    count += filtered.length;
+    const category = escapeHtml(cat);
+    html += `<details class="tool-group" data-category="${category}" ${query || !collapsedToolGroups.has(cat) ? 'open' : ''}>
+      <summary class="cat-label">${category}</summary><div class="tool-group-items">`;
     html += filtered.map(t =>
-      `<button type="button" data-id="${t.id}" class="${t.id === tool.id ? 'on' : ''}" title="${t.desc}">
-        <i>${t.icon}</i>${t.name}
+      `<button type="button" data-id="${t.id}" ${t.id === tool.id ? 'class="on" aria-current="page"' : ''} title="${escapeHtml(t.desc)}">
+        <i aria-hidden="true">${escapeHtml(t.icon)}</i>${escapeHtml(t.name)}
       </button>`
     ).join('');
+    html += '</div></details>';
   }
-  $('#nav').innerHTML = html || '<p style="padding:12px;color:var(--mute);font-size:13px">No tools match.</p>';
+  $('#nav').innerHTML = html;
+  $('#clearToolSearch').hidden = !$('#toolSearch').value;
+  $('#toolSearchStatus').textContent = query
+    ? (count ? `${count} matching tool${count === 1 ? '' : 's'}` : 'No tools match. Try another search.')
+    : '';
 }
 
 function selectTool(id) {
   if (tool.id === 'viewer') pdfViewer.close();
-  tool = TOOLS.find(t => t.id === id) || TOOLS.find(t => t.id === 'merge');
+  const legacyImageCompression = id === 'imgcompress';
+  tool = TOOLS.find(t => t.id === (legacyImageCompression ? 'imgconv' : id)) || TOOLS.find(t => t.id === 'merge');
   $('#app').classList.toggle('viewing-pdf', tool.id === 'viewer');
   files = [];
   location.hash = tool.id;
@@ -833,28 +824,28 @@ function selectTool(id) {
   inp.value = '';
   $('#dropText').textContent = tool.multi ? 'Drop files here' : 'Drop a file here';
   $('#run').hidden = tool.id === 'viewer';
+  const defaults = legacyImageCompression ? { type: 'image/jpeg', q: 0.7 } : {};
   $('#opts').innerHTML = tool.opts.map(o => {
+    const value = defaults[o.id] ?? o.value ?? '';
+    const id = `o_${o.id}`;
+    const describedBy = o.hint ? ` aria-describedby="${id}-hint"` : '';
     let field;
     if (o.type === 'select') {
-      field = `<select id="o_${o.id}">${o.options.map(([v, l]) =>
-        `<option value="${v}" ${v === (o.value ?? '') ? 'selected' : ''}>${l}</option>`
+      field = `<select id="${id}"${describedBy}>${o.options.map(([v, l]) =>
+        `<option value="${escapeHtml(v)}" ${v === value ? 'selected' : ''}>${escapeHtml(l)}</option>`
       ).join('')}</select>`;
     } else if (o.type === 'textarea') {
-      field = `<textarea id="o_${o.id}" rows="3">${o.value ?? ''}</textarea>`;
+      field = `<textarea id="${id}" rows="3"${describedBy}>${escapeHtml(value)}</textarea>`;
     } else {
-      field = `<input id="o_${o.id}" type="${o.type}" value="${o.value ?? ''}" ${o.type === 'number' ? 'step="any"' : ''}>`;
+      field = `<input id="${id}" type="${o.type}" value="${escapeHtml(value)}"${describedBy} ${o.type === 'number' ? 'step="any"' : ''}>`;
     }
-    return `<label>${o.label}${field}${o.hint ? `<span class="hint">${o.hint}</span>` : ''}</label>`;
+    return `<div class="option-field"><label for="${id}">${escapeHtml(o.label)}</label>${field}${o.hint ? `<p class="hint" id="${id}-hint">${escapeHtml(o.hint)}</p>` : ''}</div>`;
   }).join('');
   clearOut();
   status('');
   setProgress(null);
-  renderNav($('#toolSearch').value);
+  renderNav();
   renderList();
-  // close mobile menu
-  $('#side').classList.remove('open');
-  const ov = document.querySelector('.overlay');
-  if (ov) ov.classList.remove('show');
 }
 
 function renderList() {
@@ -984,9 +975,19 @@ async function run() {
 /* ─────────────────────────────────────────────
    EVENTS
    ───────────────────────────────────────────── */
-$('#nav').addEventListener('click', e => {
-  const b = e.target.closest('button[data-id]');
-  if (b) selectTool(b.dataset.id);
+function activateTool(id) {
+  if (running) return;
+  if (id !== tool.id) selectTool(id);
+  if (sidebarOpen) {
+    setSidebar(false, $('#title'));
+  } else if (document.activeElement !== $('#toolSearch')) {
+    $('#nav').querySelector('[aria-current="page"]')?.focus({ preventScroll: true });
+  }
+}
+
+$('#nav').addEventListener('click', event => {
+  const button = event.target.closest('button[data-id]');
+  if (button) activateTool(button.dataset.id);
 });
 
 $('#file').addEventListener('change', e => {
@@ -1040,11 +1041,34 @@ drop.addEventListener('keydown', e => {
   }
 });
 
-$('#toolSearch').addEventListener('input', e => renderNav(e.target.value));
+$('#toolSearch').addEventListener('input', () => {
+  renderNav();
+  $('#nav').scrollTop = 0;
+});
+$('#toolSearch').addEventListener('keydown', event => {
+  if (!event.currentTarget.value.trim() || event.isComposing) return;
+  const first = $('#nav').querySelector('details[open] button[data-id]');
+  if (!first) return;
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    activateTool(first.dataset.id);
+  } else if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    first.focus();
+  }
+});
+$('#clearToolSearch').addEventListener('click', () => {
+  $('#toolSearch').value = '';
+  renderNav();
+  $('#toolSearch').focus();
+});
 
 // Theme
 function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
+  const dark = t === 'dark';
+  $('#themeLabel').textContent = dark ? 'Light mode' : 'Dark mode';
+  $('#themeBtn .theme-icon').textContent = dark ? '☀' : '☾';
   try { localStorage.setItem('ppt-theme', t); } catch (_) {}
 }
 (function initTheme() {
@@ -1059,19 +1083,29 @@ $('#themeBtn').addEventListener('click', () => {
   applyTheme(cur === 'dark' ? 'light' : 'dark');
 });
 
-// Mobile menu
-$('#menuBtn').addEventListener('click', () => {
-  const side = $('#side');
-  side.classList.toggle('open');
-  let ov = document.querySelector('.overlay');
-  if (!ov) {
-    ov = document.createElement('div');
-    ov.className = 'overlay';
-    document.body.appendChild(ov);
-    ov.addEventListener('click', () => {
-      side.classList.remove('open');
-      ov.classList.remove('show');
-    });
-  }
-  ov.classList.toggle('show', side.classList.contains('open'));
+// Mobile tools drawer
+const mobileSidebar = matchMedia('(max-width: 860px)');
+let sidebarOpen = false;
+$('#title').tabIndex = -1;
+
+function setSidebar(open, focusTarget) {
+  sidebarOpen = mobileSidebar.matches && open;
+  $('#side').classList.toggle('open', sidebarOpen);
+  $('#side').inert = mobileSidebar.matches && !sidebarOpen;
+  $('#main').inert = sidebarOpen;
+  $('#menuBackdrop').hidden = !sidebarOpen;
+  document.body.classList.toggle('tools-open', sidebarOpen);
+  $('#menuBtn').setAttribute('aria-expanded', String(sidebarOpen));
+  (sidebarOpen ? $('#closeMenu') : focusTarget)?.focus({ preventScroll: true });
+}
+
+$('#menuBtn').addEventListener('click', () => setSidebar(true));
+$('#closeMenu').addEventListener('click', () => setSidebar(false, $('#menuBtn')));
+$('#menuBackdrop').addEventListener('click', () => setSidebar(false, $('#menuBtn')));
+mobileSidebar.addEventListener('change', () => setSidebar(false));
+document.addEventListener('keydown', event => {
+  if (!sidebarOpen || event.key !== 'Escape') return;
+  event.preventDefault();
+  setSidebar(false, $('#menuBtn'));
 });
+setSidebar(false);

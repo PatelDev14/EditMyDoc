@@ -10,38 +10,42 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=pdf-workspace">
+<link rel="stylesheet" href="styles.css?v=settings-fields">
 </head>
 <body>
 <div class="app" id="app">
-  <aside class="side" id="side">
+  <aside class="side" id="side" aria-label="Tool sidebar">
     <div class="brand">
       <span class="lock" aria-hidden="true">🔒</span>
       <div>
         <b>Private PDF Toolbox</b>
-        <small>Runs only in your browser · Nothing is uploaded</small>
+        <small>Files stay on your device</small>
       </div>
+      <button type="button" id="closeMenu" class="side-close" aria-label="Close tools menu">×</button>
     </div>
 
     <div class="search-wrap">
       <input type="search" id="toolSearch" placeholder="Search tools…" aria-label="Search tools" autocomplete="off">
+      <button type="button" id="clearToolSearch" class="search-clear" aria-label="Clear tool search" hidden>×</button>
     </div>
+    <p class="search-status" id="toolSearchStatus" role="status"></p>
 
     <nav id="nav" aria-label="Tools"></nav>
 
     <div class="side-footer">
-      <button type="button" id="themeBtn" class="theme-btn" title="Toggle light / dark">
-        <span class="theme-icon">🌓</span> Theme
+      <button type="button" id="themeBtn" class="theme-btn">
+        <span class="theme-icon" aria-hidden="true">☾</span>
+        <span id="themeLabel">Dark mode</span>
       </button>
-      <p class="privacy-note">All processing happens on your device. Close the tab and every file disappears.</p>
     </div>
   </aside>
 
-  <main class="main">
+  <div class="overlay" id="menuBackdrop" aria-hidden="true" hidden></div>
+  <main class="main" id="main">
     <header class="page-header">
       <div class="header-top">
         <h1 id="title"></h1>
-        <button type="button" id="menuBtn" class="menu-btn" aria-label="Open menu">☰</button>
+        <button type="button" id="menuBtn" class="menu-btn" aria-label="Open tools menu" aria-controls="side" aria-expanded="false"><span aria-hidden="true">☰</span> Tools</button>
       </div>
       <p id="desc"></p>
     </header>
@@ -149,7 +153,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=settings-fields"></script>
 <script src="acrobat.js"></script>
 <script src="pro.js"></script>
 <script src="redaction-review.js"></script>
